@@ -14,6 +14,7 @@
 \titlecontents{chapter}[0em]{}{第\CJKnumber{\thecontentslabel}章 \hspace{0.5em}}{}{\titlerule*{.}\contentspage}[\addvspace{1em}]
 \titlecontents{section}[1.5em]{\addvspace{-0.5em}}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
 \titlecontents{subsection}[3em]{}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
+\titlecontents{subsubsection}[4.5em]{}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
 
 % 7 中文摘要 chinese abstract
 \addcontentsline{toc}{chapter}{中文摘要} \input{Sections/0.2.Abstract_chinese} \newpage
@@ -25,7 +26,6 @@
 \renewcommand{\contentsname}{目錄} % 使用中文目錄
 \addcontentsline{toc}{chapter}{目錄}
 \tableofcontents \newpage
-
 
 % 10. 圖片目錄 中文版
 \renewcommand{\figurename}{圖} % 把caption的Figure改成"圖"
@@ -44,6 +44,7 @@
 \titleformat{\chapter}{\normalfont\huge\bfseries}{第 \CJKnumber{\thechapter} 章、}{0em}{}
 \titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\large\bfseries}{\thesubsubsection}{1em}{}
 
 } % true end. 中文目錄設定結束
 % --------------------------------------------
@@ -53,6 +54,7 @@
 \titlecontents{chapter}[0em]{}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{1em}]
 \titlecontents{section}[1.5em]{\addvspace{-0.5em}}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
 \titlecontents{subsection}[3em]{}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
+\titlecontents{subsubsection}[4.5em]{}{\thecontentslabel \hspace{1em}}{}{\titlerule*{.}\contentspage}[\addvspace{0.5em}]
 
 % 7 中文摘要 chinese abstract
 \addcontentsline{toc}{chapter}{Chinese Abstract} \input{Sections/0.2.Abstract_chinese} \newpage
@@ -79,5 +81,6 @@
 \titleformat{\chapter}{\normalfont\huge\bfseries}{Chapter {\thechapter}.}{1em}{}
 \titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
 \titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\large\bfseries}{\thesubsubsection}{1em}{}
 
 } % false end. 使用英文
