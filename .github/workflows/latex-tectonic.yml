@@ -1,8 +1,11 @@
 # push 到 main（或手動 workflow_dispatch）時，在 GitHub 雲端 runner 上用 Tectonic
-# 自包含編譯本論文（main.tex）。Tectonic 會自行下載所需 TeX 套件、自動安裝 TW-Kai
-# 中文字型並原生跑 bibtex，無需預裝 TeX Live。
-# 產物同時上傳為 Actions Artifact 與滾動 Release(latest) 附件。
-name: build-latex (github/tectonic)
+# 自包含編譯本論文（main.tex）。Tectonic 會自行下載所需 TeX 套件並原生跑 bibtex，
+# 無需預裝 TeX Live，也不依賴 Overleaf。中文字型 TW-Kai 以 apt 套件提供，
+# 對應主檔的 \setCJKmainfont{TW-Kai}。
+#
+# 產物固定上傳為 Actions Artifact。
+# 另有「滾動 Release(latest) 附件」為【可選】功能，預設關閉，詳見最後一步。
+name: build-latex (tectonic)
 on:
   push:
     branches: [main]
@@ -15,7 +18,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write          # 讓 GITHUB_TOKEN 能建立/更新 Release latest 並上傳附件
+  contents: write          # 僅在啟用下方【可選】Release 步驟時才需要；未啟用時不會用到
 
 jobs:
   build-pdf:
@@ -69,7 +72,14 @@ jobs:
           path: main.pdf
           if-no-files-found: error
 
-      - name: 發佈 PDF 到滾動 Release (latest)
+      # ----------------------------------------------------------------
+      # 【可選】把 PDF 發佈成滾動 Release(latest)，方便用固定網址下載最新版。
+      # 預設「關閉」：本步驟只有在 repo 設了 Variable PUBLISH_RELEASE=true 時才執行。
+      # 啟用方式：Settings → Secrets and variables → Actions → Variables
+      #          新增 PUBLISH_RELEASE，值填 true。
+      # ----------------------------------------------------------------
+      - name: 發佈 PDF 到滾動 Release (latest)（可選）
+        if: ${{ vars.PUBLISH_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
