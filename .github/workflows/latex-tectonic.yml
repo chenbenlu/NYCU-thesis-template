@@ -1,0 +1,86 @@
+# push 到 main（或手動 workflow_dispatch）時，在 GitHub 雲端 runner 上用 Tectonic
+# 自包含編譯本論文（main.tex）。Tectonic 會自行下載所需 TeX 套件、自動安裝 TW-Kai
+# 中文字型並原生跑 bibtex，無需預裝 TeX Live。
+# 產物同時上傳為 Actions Artifact 與滾動 Release(latest) 附件。
+name: build-latex (github/tectonic)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**.tex"
+      - "ref.bib"
+      - "img/**"
+      - "covers/**"
+      - ".github/workflows/latex-tectonic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write          # 讓 GITHUB_TOKEN 能建立/更新 Release latest 並上傳附件
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    env:
+      TECTONIC_VERSION: "0.16.9"   # 升版只改這一處（資產名隨之變動）
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝 TW-Kai 字型（本論文 \setCJKmainfont{TW-Kai}）
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends fonts-cns11643-kai
+          fc-cache -f
+          echo "可見的 Kai 字型："
+          fc-list | grep -i kai || (echo "::error::找不到 TW-Kai 字型" && exit 1)
+
+      - name: 安裝 Tectonic（官方 release binary，pin 版本）
+        run: |
+          set -euo pipefail
+          ver="${TECTONIC_VERSION}"
+          asset="tectonic-${ver}-x86_64-unknown-linux-musl.tar.gz"
+          url="https://github.com/tectonic-typesetting/tectonic/releases/download/tectonic%40${ver}/${asset}"
+          echo "下載 $url"
+          curl -fsSL "$url" -o tectonic.tar.gz
+          tar xzf tectonic.tar.gz
+          sudo install -m755 tectonic /usr/local/bin/tectonic
+          rm -f tectonic.tar.gz tectonic
+          tectonic --version
+
+      - name: 還原 Tectonic 套件 bundle 快取
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Tectonic
+          key: tectonic-bundle-${{ runner.os }}-${{ env.TECTONIC_VERSION }}-${{ hashFiles('**/*.tex', 'ref.bib') }}
+          restore-keys: |
+            tectonic-bundle-${{ runner.os }}-${{ env.TECTONIC_VERSION }}-
+            tectonic-bundle-${{ runner.os }}-
+
+      - name: 用 Tectonic 編譯（自動跑 bibtex）
+        run: |
+          set -euo pipefail
+          tectonic -X compile main.tex --keep-logs --print
+          ls -l main.pdf
+
+      - name: 上傳 PDF 為 Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-pdf
+          path: main.pdf
+          if-no-files-found: error
+
+      - name: 發佈 PDF 到滾動 Release (latest)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          notes="Tectonic 自包含自動編譯產物。
+
+          來源 commit：${GITHUB_SHA}
+          編譯時間（UTC）：$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          if gh release view latest >/dev/null 2>&1; then
+            gh release edit latest --notes "$notes"
+            gh release upload latest main.pdf --clobber
+          else
+            gh release create latest main.pdf -t "最新編譯 PDF" -n "$notes"
+          fi
